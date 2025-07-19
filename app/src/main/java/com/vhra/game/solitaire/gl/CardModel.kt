@@ -144,10 +144,9 @@ class CardModel (
 
     fun update(projection: FloatArray) {
         Matrix.setIdentityM(mvp, 0)
+        Matrix.translateM(mvp, 0, position.x, position.y, position.z)
         Matrix.multiplyMM(mvp, 0, projection, 0, mvp, 0)
         onUpdateCallback(mvp)
-        Matrix.translateM(mvp, 0, position.x, position.y, position.z)
-
 //        animation?.update(area, mvp)
     }
 
