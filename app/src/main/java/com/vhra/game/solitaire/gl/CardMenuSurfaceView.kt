@@ -25,37 +25,35 @@ class CardMenuSurfaceView(context: Context) : GLSurfaceView(context)  {
 
     var clickedCard: CardModel? = null
     var clickedPoint: Vec2? = null
+    var previousCardPosition: Vec3? = null
 
     @SuppressLint("ClickableViewAccessibility")
     override fun onTouchEvent(event: MotionEvent?): Boolean {
-        event?.let {
-            if (it.action == MotionEvent.ACTION_DOWN) {
-                clickedCard = renderer.getCollisionCard(it.x, it.y)
-                clickedPoint = Vec2(it.x, it.y)
-                return true
-            } else if (it.action == MotionEvent.ACTION_MOVE) {
-                clickedPoint?.let { previous ->
-                    val move = calculateTranslate(previous, Vec2(it.x, it.y))
-                    clickedCard?.translate(move.x, move.y, 0.1f)
-                }
-                return false
-            } else if (it.action == MotionEvent.ACTION_UP) {
-//                if (clickedCard?.animation != null) {
-//                    if (clickedCard?.animation?.isPlay() != false) clickedCard?.animation?.stop()
-//                    else clickedCard?.animation?.play()
-//                } else {
-//                    clickedCard?.animation = CardFlipAnimation()
-//                    clickedCard?.animation?.play()
-//                }
-
-                clickedCard?.translate(0f, 0f, 0f)
-                clickedCard = null
-                clickedPoint = null
+        when(event?.action) {
+            MotionEvent.ACTION_DOWN -> {
+                clickedCard = renderer.getCollisionCard(event.x, event.y)
+                clickedPoint = Vec2(event.x, event.y)
+                previousCardPosition = clickedCard?.position
                 return true
             }
-//            renderer.onTouchEvent(it.x, it.y)
+            MotionEvent.ACTION_MOVE -> {
+                clickedPoint?.let { previous ->
+                    val move = calculateTranslate(previous, Vec2(event.x, event.y))
+                    clickedCard?.position = Vec3(
+                        (previousCardPosition?.x ?: 0f) + move.x,
+                        (previousCardPosition?.y ?: 0f) + move.y,
+                        0.1f
+                    )
+                }
+                return false
+            }
+            else -> {
+                clickedCard?.position = clickedCard?.position?.copy(z = 0f) ?: Vec3()
+                clickedCard = null
+                clickedPoint = null
+                return false
+            }
         }
-        return false //super.onTouchEvent(event)
     }
 
     private fun calculateTranslate(previousMouse: Vec2, currentMouse: Vec2): Vec3 {

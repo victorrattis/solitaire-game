@@ -65,7 +65,6 @@ class GlRenderer(private val context: Context) : GLSurfaceView.Renderer {
         Matrix.setIdentityM(projection, 0)
 
         val farPoint = 10f
-
         val ratio: Float = width.toFloat() / height.toFloat()
         Matrix.frustumM(projection, 0, -ratio, ratio, -1f, 1f, 3f, farPoint + 0.00001f)
 

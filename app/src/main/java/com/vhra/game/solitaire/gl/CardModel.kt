@@ -27,7 +27,7 @@ class CardModel (
 
     private var isLoaded: Boolean = false
 
-    private var position: Vec3 = Vec3()
+    var position: Vec3 = Vec3()
 
     private lateinit var vertexBuffer: FloatBuffer
     private var vertices = floatArrayOf()
@@ -43,18 +43,17 @@ class CardModel (
         4, 7, 6
     )
 
-    var mvp: FloatArray = FloatArray(16)
+    private var mvp: FloatArray = FloatArray(16)
 
     private val numberOfVertices: Int = vertices.size / COORDINATE_FOR_VERTEX
 
     private fun getVertexCapacity(): Int = vertices.size * COORDINATE_BYTES
 
-    var texture: Int = 0
+    private var texture: Int = 0
+    private var backCardCoordinateTexture = floatArrayOf()
+    private var frontCardCoordinateTexture = floatArrayOf()
 
-    private var frontCoordText = floatArrayOf(0f, 0f, 0.5f, 1f)
-    private var backCoordText = floatArrayOf(0.5f, 0f, 1f, 1f)
-
-    var mTextureDataHandle: Int = 0
+    private var mTextureDataHandle: Int = 0
 
     private var area = floatArrayOf()
 
@@ -81,46 +80,35 @@ class CardModel (
         )
     }
 
-    private fun setFrontCoordinateText(coods: FloatArray) {
-        frontCoordText = coods
+    private fun setBackCoordinateTexture(value: FloatArray) {
+        backCardCoordinateTexture = value
     }
 
-    private fun setFrontCoordinateText(startX: Float, startY: Float, endX: Float, endY: Float) {
-        frontCoordText = floatArrayOf(startX, startY, endX, endY)
-    }
-
-    private fun setBackCoordinateText(coods: FloatArray) {
-        backCoordText = coods
-    }
-    private fun setBackCoordinateText(startX: Float, startY: Float, endX: Float, endY: Float) {
-        backCoordText = floatArrayOf(startX, startY, endX, endY)
-    }
-
-    fun translate(x: Float, y: Float, z: Float) {
-        position = Vec3(x, y, z)
+    private fun setFrontCoordinateTexture(value: FloatArray) {
+        frontCardCoordinateTexture = value
     }
 
     private fun loadCoordinateTexture() {
         textCoordinates = floatArrayOf(
-            // back
-            backCoordText[2], backCoordText[1],
-            backCoordText[2], backCoordText[3],
-            backCoordText[0], backCoordText[3],
-            backCoordText[0], backCoordText[1],
-
             // front
-            frontCoordText[2], frontCoordText[1],
-            frontCoordText[2], frontCoordText[3],
-            frontCoordText[0], frontCoordText[3],
-            frontCoordText[0], frontCoordText[1]
+            frontCardCoordinateTexture[2], frontCardCoordinateTexture[3],
+            frontCardCoordinateTexture[2], frontCardCoordinateTexture[1],
+            frontCardCoordinateTexture[0], frontCardCoordinateTexture[1],
+            frontCardCoordinateTexture[0], frontCardCoordinateTexture[3],
+
+            // back
+            backCardCoordinateTexture[2], backCardCoordinateTexture[3],
+            backCardCoordinateTexture[2], backCardCoordinateTexture[1],
+            backCardCoordinateTexture[0], backCardCoordinateTexture[1],
+            backCardCoordinateTexture[0], backCardCoordinateTexture[3]
         )
     }
 
     private fun loadGeometry() {
         setCardArea(width, height)
         texture = R.drawable.card_textures
-        setFrontCoordinateText(getTextureCoordinate(rank, suit))
-        setBackCoordinateText(getBackCardTextureCoordinate())
+        setFrontCoordinateTexture(getTextureCoordinate(rank, suit))
+        setBackCoordinateTexture(getBackCardTextureCoordinate())
     }
 
     fun load(textureLoader: TextureLoader) {
