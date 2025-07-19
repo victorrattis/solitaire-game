@@ -3,31 +3,40 @@ package com.vhra.game.solitaire.gl
 import android.content.Context
 import android.opengl.GLES20
 import android.opengl.GLSurfaceView
-import android.opengl.GLU
 import android.opengl.Matrix
 import android.util.Log
+import com.vhra.game.solitaire.R
 import com.vhra.game.solitaire.gl.anim.CardFlipAnimation
+import com.vhra.game.solitaire.gl.utils.Logger.logd
 import com.vhra.game.solitaire.gl.utils.ShaderLoader
 import com.vhra.game.solitaire.gl.utils.TextureLoader
-import com.vhra.game.solitaire.R
 import javax.microedition.khronos.egl.EGLConfig
 import javax.microedition.khronos.opengles.GL10
 import kotlin.math.max
 import kotlin.math.min
 
-class GlRenderer(private val context: Context) : GLSurfaceView.Renderer {
-    companion object {
-        const val CARD_WIDTH = 0.64f
-        const val CARD_HEIGHT = 1f
-    }
+data class Vec2(val x: Float, val y: Float) {
+    operator fun minus(a: Vec2): Vec2 = Vec2(x - a.x, y - a.y)
+    fun toArray(): FloatArray = floatArrayOf(x, y)
+}
 
+data class Vec3(val x: Float = 0f, val y: Float = 0f, val z: Float = 0f) {
+    fun toArray(): FloatArray = floatArrayOf(x, y, z)
+    operator fun minus(a: Vec3): Vec3 = Vec3(x - a.x, y - a.y, z - a.z)
+}
+
+class GlRenderer(private val context: Context) : GLSurfaceView.Renderer {
     private lateinit var textureLoader: TextureLoader
 
     private val models: MutableList<CardModel> = mutableListOf()
 
-    public var projectionMatrix = FloatArray(16)
+    var projectionMatrix = FloatArray(16)
 
     var screenSize: IntArray = intArrayOf()
+
+    fun addModels(models: List<CardModel>) {
+        this.models.addAll(models)
+    }
 
     private val shader = Shader(
         vertex = R.raw.vertex,
@@ -51,98 +60,6 @@ class GlRenderer(private val context: Context) : GLSurfaceView.Renderer {
         shaderLoader.load(shader)
         shader.dump()
 
-        val textureSize = floatArrayOf(2015f, 1948f)
-
-        models.add(CardModel("card 0").apply {
-            texture = R.drawable.card_textures
-            setCardArea(CARD_WIDTH, CARD_HEIGHT)
-            setFrontCoordinateText(3f/textureSize[0], 3f/textureSize[1], 196f/textureSize[0], 273f/textureSize[1])
-            setBackCoordinateText(1213f/textureSize[0], 1f/textureSize[0], 1408f/textureSize[0], 272f/textureSize[1])
-            setOnUpdate { }
-        })
-
-        models.add(CardModel("card 1").apply {
-            texture = R.drawable.card_textures
-            setCardArea(CARD_WIDTH, CARD_HEIGHT)
-            setFrontCoordinateText(205f/textureSize[0], 3f/textureSize[1], 397f/textureSize[0], 272f/textureSize[1])
-            setBackCoordinateText(1213f/textureSize[0], 1f/textureSize[1], 1408f/textureSize[0], 272f/textureSize[1])
-            setOnUpdate { matrix ->
-                Matrix.translateM(matrix, 0, 0f, 1f + 0.02f, 0f)
-            }
-        })
-
-        models.add(CardModel("card 2").apply {
-            texture = R.drawable.card_textures
-            setCardArea(CARD_WIDTH, CARD_HEIGHT)
-            setFrontCoordinateText(811f/textureSize[0], 1398f/textureSize[1], 1003f/textureSize[0], 1667f/textureSize[1])
-            setBackCoordinateText(1213f/textureSize[0], 1f/textureSize[1], 1408f/textureSize[0], 272f/textureSize[1])
-            setOnUpdate { matrix ->
-                Matrix.translateM(matrix, 0, CARD_WIDTH + 0.02f, 1f + 0.02f, 0f)
-            }
-        })
-
-        models.add(CardModel("card 3").apply {
-            texture = R.drawable.card_textures
-            setCardArea(CARD_WIDTH, CARD_HEIGHT)
-            setFrontCoordinateText(811f/textureSize[0], 1398f/textureSize[1], 1003f/textureSize[0], 1667f/textureSize[1])
-            setBackCoordinateText(1213f/textureSize[0], 1f/textureSize[1], 1408f/textureSize[0], 272f/textureSize[1])
-            setOnUpdate { matrix ->
-                Matrix.translateM(matrix, 0, -(CARD_WIDTH + 0.02f), 1f + 0.02f, 0f)
-            }
-        })
-
-        models.add(CardModel("card 4").apply {
-            texture = R.drawable.card_textures
-            setCardArea(CARD_WIDTH, CARD_HEIGHT)
-            setFrontCoordinateText(811f/textureSize[0], 1398f/textureSize[1], 1003f/textureSize[0], 1667f/textureSize[1])
-            setBackCoordinateText(1213f/textureSize[0], 1f/textureSize[1], 1408f/textureSize[0], 272f/textureSize[1])
-            setOnUpdate { matrix ->
-                Matrix.translateM(matrix, 0, -(CARD_WIDTH + 0.02f), -(1f + 0.02f), 0f)
-            }
-        })
-
-        models.add(CardModel("card 5").apply {
-            texture = R.drawable.card_textures
-            setCardArea(CARD_WIDTH, CARD_HEIGHT)
-            setFrontCoordinateText(811f/textureSize[0], 1398f/textureSize[1], 1003f/textureSize[0], 1667f/textureSize[1])
-            setBackCoordinateText(1213f/textureSize[0], 1f/textureSize[1], 1408f/textureSize[0], 272f/textureSize[1])
-            setOnUpdate { matrix ->
-                Matrix.translateM(matrix, 0, -(CARD_WIDTH + 0.02f), 0f, 0f)
-            }
-        })
-
-        models.add(CardModel("card 6").apply {
-            texture = R.drawable.card_textures
-            setCardArea(CARD_WIDTH, CARD_HEIGHT)
-            setFrontCoordinateText(811f/textureSize[0], 1398f/textureSize[1], 1003f/textureSize[0], 1667f/textureSize[1])
-            setBackCoordinateText(1213f/textureSize[0], 1f/textureSize[1], 1408f/textureSize[0], 272f/textureSize[1])
-            setOnUpdate { matrix ->
-                Matrix.translateM(matrix, 0, (CARD_WIDTH + 0.02f), 0f, 0f)
-            }
-        })
-
-        models.add(CardModel("card 7").apply {
-            texture = R.drawable.card_textures
-            setCardArea(CARD_WIDTH, CARD_HEIGHT)
-            setFrontCoordinateText(811f/textureSize[0], 1398f/textureSize[1], 1003f/textureSize[0], 1667f/textureSize[1])
-            setBackCoordinateText(1213f/textureSize[0], 1f/textureSize[1], 1408f/textureSize[0], 272f/textureSize[1])
-            setOnUpdate { matrix ->
-                Matrix.translateM(matrix, 0, (CARD_WIDTH + 0.02f), -(1f + 0.02f), 0f)
-            }
-        })
-
-        models.add(CardModel("card 8").apply {
-            texture = R.drawable.card_textures
-            setCardArea(CARD_WIDTH, CARD_HEIGHT)
-            setFrontCoordinateText(811f/textureSize[0], 1398f/textureSize[1], 1003f/textureSize[0], 1667f/textureSize[1])
-            setBackCoordinateText(1213f/textureSize[0], 1f/textureSize[1], 1408f/textureSize[0], 272f/textureSize[1])
-            setOnUpdate { matrix ->
-                Matrix.translateM(matrix, 0, 0f, -(1f + 0.02f), 0f)
-            }
-        })
-
-        models.forEach { it.load(textureLoader) }
-
         shader.useProgram()
     }
 
@@ -153,11 +70,12 @@ class GlRenderer(private val context: Context) : GLSurfaceView.Renderer {
         0, 0, screenSize[0], screenSize[1])
 
     override fun onSurfaceChanged(gl: GL10?, width: Int, height: Int) {
+        logd("Viewport: 0, 0, $width, $height")
         GLES20.glViewport(0, 0, width, height)
         screenSize = intArrayOf(width, height)
 
         val ratio: Float = width.toFloat() / height.toFloat()
-        Matrix.frustumM(projection, 0, -ratio, ratio, -1f, 1f, 3f, 20f)
+        Matrix.frustumM(projection, 0, -ratio, ratio, -1f, 1f, 3f, 100f)
 
         val camera = Camera3D(
             eye = floatArrayOf(0f, 0f, -10f),
@@ -170,6 +88,8 @@ class GlRenderer(private val context: Context) : GLSurfaceView.Renderer {
 
     override fun onDrawFrame(gl: GL10?) {
         GLES20.glClear(GLES20.GL_COLOR_BUFFER_BIT or GLES20.GL_DEPTH_BUFFER_BIT)
+
+        models.forEach { it.load(textureLoader) }
 
         models.forEach { it.update(projectionMatrix) }
 
@@ -211,8 +131,6 @@ class GlRenderer(private val context: Context) : GLSurfaceView.Renderer {
     fun normalize(x: Float, y: Float): FloatArray {
         return floatArrayOf(x / screenSize[0], y / screenSize[1])
     }
-
-
 
     fun convertGlCoordinateSystem(x: Float, y: Float): FloatArray {
         return floatArrayOf(

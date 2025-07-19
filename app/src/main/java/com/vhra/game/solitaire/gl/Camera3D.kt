@@ -1,7 +1,5 @@
 package com.vhra.game.solitaire.gl
 
-import android.opengl.GLES20
-import android.opengl.GLU
 import android.opengl.Matrix
 
 class Camera3D (

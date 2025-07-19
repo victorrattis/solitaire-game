@@ -2,42 +2,38 @@ package com.vhra.game.solitaire.gl
 
 import android.opengl.GLES20
 import android.opengl.Matrix
+import com.vhra.game.solitaire.R
 import com.vhra.game.solitaire.gl.anim.Animation
 import com.vhra.game.solitaire.gl.utils.BufferUtils
+import com.vhra.game.solitaire.gl.utils.CardTextureMapper.getBackCardTextureCoordinate
+import com.vhra.game.solitaire.gl.utils.CardTextureMapper.getTextureCoordinate
+import com.vhra.game.solitaire.gl.utils.Rank
+import com.vhra.game.solitaire.gl.utils.Suit
 import com.vhra.game.solitaire.gl.utils.TextureLoader
 import java.nio.FloatBuffer
 import java.nio.ShortBuffer
 
-class CardModel (private val name: String = "default") {
+class CardModel (
+    val width: Float,
+    val height: Float,
+    val rank: Rank,
+    val suit: Suit
+) {
     companion object {
         const val COORDINATE_FOR_VERTEX = 2
         private const val COORDINATE_BYTES = 4
         const val VERTEX_BYTES = COORDINATE_FOR_VERTEX * COORDINATE_BYTES
     }
 
+    private var isLoaded: Boolean = false
+
+    private var position: Vec3 = Vec3()
+
     private lateinit var vertexBuffer: FloatBuffer
-    private var vertices = floatArrayOf(
-        -0.5f,  0.5f,
-        -0.5f, -0.5f,
-        0.5f, -0.5f,
-        0.5f,  0.5f,
-        -0.5f,  0.5f,
-        -0.5f, -0.5f,
-        0.5f, -0.5f,
-        0.5f,  0.5f
-    )
+    private var vertices = floatArrayOf()
 
     private lateinit var textCoordBuffer: FloatBuffer
-    private var textCoordinates = floatArrayOf(
-        0.0f, 0.0f,
-        0.0f, 1.0f,
-        0.5f, 1.0f,
-        0.5f, 0.0f,
-        1.0f, 0.0f,
-        1.0f, 1.0f,
-        0.5f, 1.0f,
-        0.5f, 0.0f
-    )
+    private var textCoordinates = floatArrayOf()
 
     private lateinit var indexBuffer: ShortBuffer
     private val indices = shortArrayOf(
@@ -85,17 +81,23 @@ class CardModel (private val name: String = "default") {
         )
     }
 
-    fun setFrontCoordinateText(startX: Float, startY: Float, endX: Float, endY: Float) {
+    private fun setFrontCoordinateText(coods: FloatArray) {
+        frontCoordText = coods
+    }
+
+    private fun setFrontCoordinateText(startX: Float, startY: Float, endX: Float, endY: Float) {
         frontCoordText = floatArrayOf(startX, startY, endX, endY)
     }
 
-    fun setBackCoordinateText(startX: Float, startY: Float, endX: Float, endY: Float) {
+    private fun setBackCoordinateText(coods: FloatArray) {
+        backCoordText = coods
+    }
+    private fun setBackCoordinateText(startX: Float, startY: Float, endX: Float, endY: Float) {
         backCoordText = floatArrayOf(startX, startY, endX, endY)
     }
 
-    private var position: Pair<Float, Float> = 0f to 0f
-    fun translate(x: Float, y: Float) {
-        position = x to y
+    fun translate(x: Float, y: Float, z: Float) {
+        position = Vec3(x, y, z)
     }
 
     private fun loadCoordinateTexture() {
@@ -114,7 +116,17 @@ class CardModel (private val name: String = "default") {
         )
     }
 
+    private fun loadGeometry() {
+        setCardArea(width, height)
+        texture = R.drawable.card_textures
+        setFrontCoordinateText(getTextureCoordinate(rank, suit))
+        setBackCoordinateText(getBackCardTextureCoordinate())
+    }
+
     fun load(textureLoader: TextureLoader) {
+        if (isLoaded) return
+
+        loadGeometry()
         loadCoordinateTexture()
 
         vertexBuffer = BufferUtils.createFloatBuffer(vertices, getVertexCapacity())
@@ -122,6 +134,7 @@ class CardModel (private val name: String = "default") {
         textCoordBuffer = BufferUtils.createFloatBuffer(textCoordinates, textCoordinates.size * 4)
 
         mTextureDataHandle = textureLoader.loadTexture(texture)
+        isLoaded = true
     }
 
     var onUpdateCallback: (matrix: FloatArray) -> Unit = {}
@@ -129,24 +142,18 @@ class CardModel (private val name: String = "default") {
         onUpdateCallback = callback
     }
 
-//    fun getModel(): FloatArray {
-//        val m = FloatArray(16)
-//        Matrix.setIdentityM(m, 0)
-//        onUpdateCallback(m)
-//        return m
-//    }
-
     fun update(projection: FloatArray) {
         Matrix.setIdentityM(mvp, 0)
         Matrix.multiplyMM(mvp, 0, projection, 0, mvp, 0)
         onUpdateCallback(mvp)
-        if (position.first != 0f || position.second != 0f) {
-            Matrix.translateM(mvp, 0, 0f, position.second, -position.first)
-        }
+        Matrix.translateM(mvp, 0, position.x, position.y, position.z)
+
 //        animation?.update(area, mvp)
     }
 
     fun draw(shader: Shader) {
+        if (!isLoaded) return
+
         GLES20.glUniformMatrix4fv(
             shader.getUniform("mvp"),
             1,
