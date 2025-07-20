@@ -24,3 +24,15 @@ class RotateAnimation : Animation {
 
     override fun isPlay(): Boolean = !stop
 }
+
+class Flipped : Animation {
+    override fun update(area: FloatArray, matrix: FloatArray) {
+        Matrix.rotateM(matrix, 0, 180f, 0f, 1f, 0f)
+    }
+
+    override fun stop() {}
+
+    override fun play() {}
+
+    override fun isPlay(): Boolean = false
+}

@@ -2,13 +2,12 @@ package com.vhra.game.solitaire.gl
 
 import android.opengl.GLES20
 import android.opengl.Matrix
+import com.vhra.game.solitaire.CardId
 import com.vhra.game.solitaire.R
 import com.vhra.game.solitaire.gl.anim.Animation
 import com.vhra.game.solitaire.gl.utils.BufferUtils
 import com.vhra.game.solitaire.gl.utils.CardTextureMapper.getBackCardTextureCoordinate
 import com.vhra.game.solitaire.gl.utils.CardTextureMapper.getTextureCoordinate
-import com.vhra.game.solitaire.gl.utils.Rank
-import com.vhra.game.solitaire.gl.utils.Suit
 import com.vhra.game.solitaire.gl.utils.TextureLoader
 import java.nio.FloatBuffer
 import java.nio.ShortBuffer
@@ -16,8 +15,7 @@ import java.nio.ShortBuffer
 class CardModel (
     val width: Float,
     val height: Float,
-    val rank: Rank,
-    val suit: Suit
+    val cardId: CardId
 ) {
     companion object {
         const val COORDINATE_FOR_VERTEX = 2
@@ -27,7 +25,13 @@ class CardModel (
 
     private var isLoaded: Boolean = false
 
+
     var position: Vec3 = Vec3()
+    var rotate = Vec3()
+
+    fun flip() {
+        rotate = rotate.copy(x = 180f)
+    }
 
     private lateinit var vertexBuffer: FloatBuffer
     private var vertices = floatArrayOf()
@@ -43,7 +47,7 @@ class CardModel (
         4, 7, 6
     )
 
-    private var mvp: FloatArray = FloatArray(16)
+    var mvp: FloatArray = FloatArray(16)
 
     private val numberOfVertices: Int = vertices.size / COORDINATE_FOR_VERTEX
 
@@ -107,7 +111,7 @@ class CardModel (
     private fun loadGeometry() {
         setCardArea(width, height)
         texture = R.drawable.card_textures
-        setFrontCoordinateTexture(getTextureCoordinate(rank, suit))
+        setFrontCoordinateTexture(getTextureCoordinate(cardId.rank, cardId.suit))
         setBackCoordinateTexture(getBackCardTextureCoordinate())
     }
 
@@ -125,17 +129,12 @@ class CardModel (
         isLoaded = true
     }
 
-    var onUpdateCallback: (matrix: FloatArray) -> Unit = {}
-    fun setOnUpdate(callback: (matrix: FloatArray) -> Unit) {
-        onUpdateCallback = callback
-    }
-
     fun update(projection: FloatArray) {
         Matrix.setIdentityM(mvp, 0)
         Matrix.translateM(mvp, 0, position.x, position.y, position.z)
         Matrix.multiplyMM(mvp, 0, projection, 0, mvp, 0)
-        onUpdateCallback(mvp)
-//        animation?.update(area, mvp)
+//        Matrix.rotateM(mvp, 0, rotate.x, rotate.y, 0.5f, 0f)
+        animation?.update(area, mvp)
     }
 
     fun draw(shader: Shader) {
@@ -175,6 +174,17 @@ class CardModel (
             indices.size,
             GLES20.GL_UNSIGNED_SHORT,
             indexBuffer
+        )
+    }
+
+    fun rectangle(): FloatArray {
+        val start = floatArrayOf(area[0], area[1], 0f, 1f)
+        Matrix.multiplyMV(start, 0, mvp, 0, start, 0)
+        return floatArrayOf(
+            start[0]/start[3],
+            start[1]/start[3],
+            width,
+            height
         )
     }
 

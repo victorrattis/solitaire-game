@@ -1,16 +1,7 @@
 package com.vhra.game.solitaire.gl.utils
 
-enum class Suit {
-    CLUBS,     //(♣)
-    DIAMONDS, // (♦)
-    HEARTS,   // (♥)
-    SPADES    // (♠)
-}
-
-enum class Rank {
-    ACE, TWO, THREE, FOUR, FIVE, SIX, SEVEN, EIGHT, NINE, TEN,
-    JACK, QUEEN, KING
-}
+import com.vhra.game.solitaire.Rank
+import com.vhra.game.solitaire.Suit
 
 private data class Coord(val row: Int, val column: Int)
 
