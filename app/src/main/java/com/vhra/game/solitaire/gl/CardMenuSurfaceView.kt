@@ -64,22 +64,29 @@ class CardMenuSurfaceView(context: Context) : GLSurfaceView(context)  {
                     )
                     if (card != null) {
                         clickedCard?.let {
-                            it.position = card.position.copy(y = (card.position.y - 0.25f))
-                            val nextColumn = game.getColumn(card.cardId)
-                            val previousColumn = game.getColumn(clickedCard!!.cardId)
-                            nextColumn?.let {
-                                game.switchColumn(clickedCard!!.cardId, nextColumn)
-                            }
-                            previousColumn?.let {
-                                var previousColumnCard = game.getCardColumn(previousColumn)
-                                previousColumnCard?.let {
-                                    previousColumnCard.isFaceUp = true
-                                    renderer.getCardModel(previousColumnCard.id)?.let {
-                                        it.animation = null
+                            val matched = game.isCardMatched(card.cardId, clickedCard!!.cardId)
+                            if (matched) {
+                                it.position = card.position.copy(y = (card.position.y - 0.25f))
+                                val nextColumn = game.getColumn(card.cardId)
+                                val previousColumn = game.getColumn(clickedCard!!.cardId)
+                                nextColumn?.let {
+                                    game.switchColumn(clickedCard!!.cardId, nextColumn)
+                                }
+                                previousColumn?.let {
+                                    var previousColumnCard = game.getCardColumn(previousColumn)
+                                    previousColumnCard?.let {
+                                        previousColumnCard.isFaceUp = true
+                                        renderer.getCardModel(previousColumnCard.id)?.let {
+                                            it.animation = null
+                                        }
                                     }
                                 }
+                                renderer.orderToTop(clickedCard!!.cardId)
+                            } else {
+                                if (previousCardPosition != null) {
+                                    it.position = previousCardPosition!!
+                                }
                             }
-                            renderer.orderToTop(clickedCard!!.cardId)
                         }
                     } else {
                         clickedCard?.let {

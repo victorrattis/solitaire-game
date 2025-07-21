@@ -86,6 +86,17 @@ class SolitaireGame {
         }
     }
 
+    fun isCardMatched(base: CardId, top: CardId): Boolean {
+        if (top.rank.id + 1 == base.rank.id) {
+            return areSuitsOpposite(base.suit, top.suit)
+        }
+        return false
+    }
+
+    private fun areSuitsOpposite(suit1: Suit, suit2: Suit): Boolean = suit1 != suit2 &&
+            ((suit1 == Suit.DIAMONDS || suit1 == Suit.HEARTS)
+                    != (suit2 == Suit.DIAMONDS || suit2 == Suit.HEARTS))
+
 
 }
 
